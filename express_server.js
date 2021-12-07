@@ -13,7 +13,7 @@ const generateRandomString = function() {
 }
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
+  "b2xVn2":  "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
@@ -31,8 +31,18 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  
-  res.send("Ok");         
+  console.log(req.body.longURL);  
+  const generateShortUrl = generateRandomString();
+  urlDatabase[generateShortUrl] = req.body.longURL;
+  console.log(urlDatabase);
+  res.redirect(`/urls/${generateShortUrl}`)
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  if (urlDatabase[req.params.shortURL]){
+    const longURL = urlDatabase[req.params.shortURL];
+    res.redirect(longURL);
+  } 
 });
 
 app.get("/urls/:shortURL", (req, res) => {
