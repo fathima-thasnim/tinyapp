@@ -29,7 +29,11 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  // console.log('Cookies: ', req.cookies);
+  // console.log("cookiebody:",req.body)
+  // res.cookie("username",req.cookies.username);
+  const templateVars = { urls: urlDatabase, username: req.cookies["username"]};
+  res.render("urls_new",templateVars);
 });
 
 app.post("/urls", (req, res) => {
