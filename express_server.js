@@ -3,11 +3,12 @@ const app = express();
 const PORT = 8080; //default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const bcrypt = require('bcryptjs');
+const saltRounds = 10;
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
-
 
 // to generate a random alphanumeric character
 const generateRandomString = function() {
@@ -34,7 +35,21 @@ const emailLookup = (email) => {
     } 
   }
   return null;
-} 
+};
+
+// //authenticate the user
+// const authenticateUser = (email, password, users) => {
+//   // retrieve the user with that email
+//   const user = emailLookup(email, users);
+//   // if we got a user back and the passwords match then return the userObj
+//   if (bcrypt.compareSync(password, user.password)) {
+//     // user is authenticated
+//     return user;
+//   } else {
+//     // Otherwise return false
+//     return false;
+//   }
+// };
 
 
 // const urlDatabase = {
@@ -46,12 +61,12 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password:  bcrypt.hashSync("purple-monkey-dinosaur", 10)
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: bcrypt.hashSync("dishwasher-funk", 10)
   }
 };
 const urlDatabase = {
@@ -67,7 +82,7 @@ const urlDatabase = {
 
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect('/urls');
 });
 
 app.get("/urls", (req, res) => {
@@ -150,15 +165,14 @@ app.post('/login', (req,res) => {
   // console.log(userName);
   const email = req.body.email;
   const password = req.body.password;
-  const user = emailLookup(email);
+  const user = emailLookup(email)
+  // const user = (email, password);
   if (!user) {
     return res.status(403).send("User not found")
   }
-  console.log("/login password",password)
-  console.log("/login user.password",user.password);
-  console.log("/login user",user);
+  console.log("/login", user);
 
-  if (user.password !== password) {
+  if (!bcrypt.compareSync(password, user["password"])) {
     return res.status(403).send("Invalid password");
   }
   res.cookie("user_id", user.id);
@@ -187,7 +201,8 @@ app.post('/register', (req, res) => {
     return res.status(400).send("Email already exists");
   }
   const userRandomID = generateRandomString();
-  const newUser = { id: userRandomID, email, password }
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  const newUser = { id: userRandomID, email: email, password: hashedPassword }
   users[userRandomID] = newUser;
   res.cookie('user_id',userRandomID);
   res.redirect('/urls');
