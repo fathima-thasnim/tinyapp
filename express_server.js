@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const cookieSession = require("cookie-session");
 const bcrypt = require('bcryptjs');
-const { getUserByEmail } = require('./helpers');
+const { getUserByEmail, isUrlOwner } = require('./helpers');
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
@@ -171,10 +171,8 @@ app.post('/login', (req,res) => {
   const user = getUserByEmail(email,users)
   // const user = (email, password);
   if (!user) {
-    console.log( user.password);
     return res.status(403).send("User not found")
   }
-  console.log("/login", user);
   
   if (!bcrypt.compareSync(password, user.password)) {
     // console.log(password, user[password]);
@@ -239,7 +237,11 @@ app.get('/login', (req,res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL].longURL;
+  const currUserID = req.session.user_id
+
   // const templateVars = { shortURL, longURL,  username: req.cookies["username"] };
+  if(!isUrlOwner(urlDatabase, shortURL, currUserID)) res.status(401).send('Not the resource owner')
+  
   const templateVars = { shortURL, longURL, user: users[req.session["user_id"]] };
   res.render("urls_show", templateVars);
 });

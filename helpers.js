@@ -7,4 +7,8 @@ const getUserByEmail = (email, database) => {
   return null;
 };
 
-module.exports = {getUserByEmail};
+const isUrlOwner = (urlDatabase, shortURL, currUserID) => {
+  return urlDatabase[shortURL].userID === currUserID
+}
+
+module.exports = {getUserByEmail, isUrlOwner};
