@@ -70,7 +70,6 @@ app.get("/", (req, res) => {
 
 //LIST OF URLS
 app.get("/urls", (req, res) => {
-  //const templateVars = { urls: urlDatabase, username: req.cookies["username"]};
   const userID = req.session.user_id
   if(!userID) {
     res.redirect("/login");
@@ -83,10 +82,6 @@ app.get("/urls", (req, res) => {
 
 //CREATE NEW URL
 app.get("/urls/new", (req, res) => {
-  // console.log('Cookies: ', req.cookies);
-  // console.log("cookiebody:",req.body)
-  // res.cookie("username",req.cookies.username);
-  // const templateVars = { username: req.cookies["username"]};
   const userID = req.session.user_id
   const templateVars = { user: users[userID] };
   if(!users[userID]) {
@@ -95,6 +90,8 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new",templateVars);
   }
 });
+
+
 
 //PROCESS NEW URL
 app.post("/urls", (req, res) => {
@@ -147,13 +144,10 @@ app.post('/urls/:shortURL/edit', (req,res) => {
   const shortURL = req.params.shortURL;
   console.log("userID",user_ID);
   console.log("another",urlDatabase[shortURL].userID);
-  // console.log("shorturl",shortURL);
-  // console.log("urldatabase",urlDatabase);
   if (!user_ID) {
     return res.send("not found")
   }
   if (user_ID !== (urlDatabase[shortURL].userID)) {
-    
     return res.send("user is not allowed to edit");
   } 
   urlDatabase[req.params.shortURL].longURL = longURL;
@@ -163,19 +157,12 @@ app.post('/urls/:shortURL/edit', (req,res) => {
 
 //PROCESS LOGIN
 app.post('/login', (req,res) => {
-  // const userName = req.body.username;
-  // console.log(userName);
   const {email, password} = req.body;
-  // const email = req.body.email;
-  // const password = req.body.password;
   const user = getUserByEmail(email,users)
-  // const user = (email, password);
   if (!user) {
     return res.status(403).send("User not found")
   }
-  
   if (!bcrypt.compareSync(password, user.password)) {
-    // console.log(password, user[password]);
     return res.status(403).send("Invalid password");
   }
   req.session.user_id = user.id;
@@ -202,11 +189,10 @@ app.get('/register', (req, res) => {
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  // const {email, password} = req.body;
   if (email === "" || password === "") {
     return res.status(400).send("Enter email and password");
   }
-  if (getUserByEmail(email)) {
+  if (getUserByEmail(email,users)) {
     return res.status(400).send("Email already exists");
   }
   const userRandomID = generateRandomString();
@@ -216,7 +202,6 @@ app.post('/register', (req, res) => {
   req.session.user_id = users[userRandomID].id;
   console.log({newUser});
   console.log(req.session.user_id)
-  // console.log("users",users)
   res.redirect('/urls');
 });
 
@@ -238,10 +223,8 @@ app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL].longURL;
   const currUserID = req.session.user_id
-
   // const templateVars = { shortURL, longURL,  username: req.cookies["username"] };
   if(!isUrlOwner(urlDatabase, shortURL, currUserID)) res.status(401).send('Not the resource owner')
-  
   const templateVars = { shortURL, longURL, user: users[req.session["user_id"]] };
   res.render("urls_show", templateVars);
 });
@@ -251,6 +234,8 @@ app.get("/urls/:shortURL", (req, res) => {
 app.get("/urls.json", (req,res) => {
   res.json(urlDatabase);
 });
+
+
 
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
